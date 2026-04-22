@@ -26,7 +26,12 @@ public class SecurityConfig {
                                 "/api/user/register",
                                 "/api/user/login",
                                 "/api/post/list",
-                                "/ws/**"          // 放行 WebSocket 端点（包括 SockJS 的 fallback）
+                                "/ws/**",          // 放行 WebSocket 端点（包括 SockJS 的 fallback）
+                        "/swagger-ui/**",     // Swagger UI 页面
+                        "/swagger-ui.html",   // Swagger UI 入口
+                        "/v3/api-docs/**",     // OpenAPI JSON
+                        "/swagger-resources/**",
+                        "/webjars/**"          // Swagger 静态资源
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

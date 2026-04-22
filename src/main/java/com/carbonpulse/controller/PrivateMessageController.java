@@ -5,6 +5,10 @@ import com.carbonpulse.common.Result;
 import com.carbonpulse.entity.PrivateMessage;
 import com.carbonpulse.service.PrivateMessageService;
 import com.carbonpulse.utils.JwtUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/message")
+@Tag(name = "私信消息", description = "私信会话管理、聊天记录、未读统计、消息发送")
 public class PrivateMessageController {
 
     @Autowired
@@ -36,10 +41,7 @@ public class PrivateMessageController {
         return jwtUtil.getUserIdFromToken(token);
     }
 
-    /**
-     * 获取总未读消息数（红点）
-     * GET /api/message/unread/total
-     */
+    @Operation(summary = "获取总未读消息数", description = "返回当前用户所有会话的未读消息总数，用于红点提示")
     @GetMapping("/unread/total")
     public Result getTotalUnread(HttpServletRequest request) {
         try {
@@ -51,10 +53,7 @@ public class PrivateMessageController {
         }
     }
 
-    /**
-     * 获取会话列表
-     * GET /api/message/conversations
-     */
+    @Operation(summary = "获取会话列表", description = "返回当前用户的所有私信会话，含对方用户信息、最后一条消息、未读数、在线状态")
     @GetMapping("/conversations")
     public Result getConversationList(HttpServletRequest request) {
         try {
@@ -66,15 +65,13 @@ public class PrivateMessageController {
         }
     }
 
-    /**
-     * 获取与某人的聊天记录（分页）
-     * GET /api/message/history/{otherUserId}?page=1&size=20
-     */
+    @Operation(summary = "获取聊天记录（分页）", description = "获取与指定用户的聊天记录，按时间升序排列，支持分页")
     @GetMapping("/history/{otherUserId}")
-    public Result getChatHistory(@PathVariable Long otherUserId,
-                                 @RequestParam(defaultValue = "1") int page,
-                                 @RequestParam(defaultValue = "20") int size,
-                                 HttpServletRequest request) {
+    public Result getChatHistory(
+            @Parameter(description = "对方用户ID") @PathVariable Long otherUserId,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request) {
         try {
             Long userId = getCurrentUserId(request);
             PaginatedResult<PrivateMessage> history = privateMessageService.getChatHistory(userId, otherUserId, page, size);
@@ -84,12 +81,11 @@ public class PrivateMessageController {
         }
     }
 
-    /**
-     * 标记某个会话已读（批量已读）
-     * POST /api/message/read/{otherUserId}
-     */
+    @Operation(summary = "标记会话已读", description = "将指定会话中对方发来的未读消息全部标记为已读")
     @PostMapping("/read/{otherUserId}")
-    public Result markConversationRead(@PathVariable Long otherUserId, HttpServletRequest request) {
+    public Result markConversationRead(
+            @Parameter(description = "对方用户ID") @PathVariable Long otherUserId,
+            HttpServletRequest request) {
         try {
             Long userId = getCurrentUserId(request);
             privateMessageService.markConversationRead(userId, otherUserId);
@@ -99,11 +95,7 @@ public class PrivateMessageController {
         }
     }
 
-    /**
-     * HTTP发送私信（WebSocket降级方案）
-     * POST /api/message/send
-     * 请求体：{ "receiverId": 123, "content": "hello", "type": 1 }
-     */
+    @Operation(summary = "发送私信（HTTP）", description = "HTTP方式发送私信，作为WebSocket断连时的降级方案")
     @PostMapping("/send")
     public Result sendMessage(@RequestBody Map<String, Object> payload, HttpServletRequest request) {
         try {

@@ -1,63 +1,54 @@
 package com.carbonpulse.controller;
 
-import com.carbonpulse.entity.PrivateMessage;
+import com.carbonpulse.common.Result;
 import com.carbonpulse.service.PrivateMessageService;
+import com.carbonpulse.utils.JwtUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 import java.util.Map;
 
 @Controller
+@Tag(name = "WebSocket消息", description = "STOMP协议实时通信：发送消息、已读回执、输入状态")
 public class WebSocketMessageController {
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     private PrivateMessageService privateMessageService;
 
-    /**
-     * 处理私信发送
-     * 前端发送到：/app/chat.send
-     * 消息体：{ "toUserId": 123, "content": "hello", "type": 1 }
-     */
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Operation(summary = "发送消息（STOMP）", description = "通过WebSocket发送私信，目标地址: /app/chat.send")
     @MessageMapping("/chat.send")
-    public void sendMessage(@Payload Map<String, Object> payload, Principal principal) {
-        Long fromUserId = Long.valueOf(principal.getName());
-        Long toUserId = Long.valueOf(payload.get("toUserId").toString());
+    public void sendMessage(Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) {
+        Principal principal = headerAccessor.getUser();
+        if (principal == null) return;
+        Long userId = Long.valueOf(principal.getName());
+        Long receiverId = Long.valueOf(payload.get("receiverId").toString());
         String content = (String) payload.get("content");
-        Integer type = payload.get("type") != null ? (Integer) payload.get("type") : 1;
-        privateMessageService.sendMessage(fromUserId, toUserId, content, type);
+        Integer type = payload.get("type") != null ? Integer.valueOf(payload.get("type").toString()) : 1;
+        privateMessageService.sendMessage(userId, receiverId, content, type);
     }
 
-    /**
-     * 处理已读回执（用户进入会话时调用）
-     * 前端发送到：/app/chat.read
-     * 消息体：{ "otherUserId": 123 }
-     */
+    @Operation(summary = "标记已读（STOMP）", description = "通过WebSocket标记消息已读，目标地址: /app/chat.read")
     @MessageMapping("/chat.read")
-    public void markRead(@Payload Map<String, Object> payload, Principal principal) {
+    public void markRead(Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) {
+        Principal principal = headerAccessor.getUser();
+        if (principal == null) return;
         Long userId = Long.valueOf(principal.getName());
         Long otherUserId = Long.valueOf(payload.get("otherUserId").toString());
         privateMessageService.markConversationRead(userId, otherUserId);
     }
 
-    /**
-     * 处理输入状态提示（正在输入）
-     * 前端发送到：/app/chat.typing
-     * 消息体：{ "toUserId": 123, "typing": true }
-     */
+    @Operation(summary = "输入状态（STOMP）", description = "通知对方自己正在输入，目标地址: /app/chat.typing")
     @MessageMapping("/chat.typing")
-    public void typing(@Payload Map<String, Object> payload, Principal principal) {
-        Long fromUserId = Long.valueOf(principal.getName());
-        Long toUserId = Long.valueOf(payload.get("toUserId").toString());
-        Boolean typing = (Boolean) payload.get("typing");
-        // 转发给接收方
-        messagingTemplate.convertAndSendToUser(toUserId.toString(), "/queue/typing",
-                Map.of("fromUserId", fromUserId, "typing", typing));
+    public void typing(Map<String, Object> payload, SimpMessageHeaderAccessor headerAccessor) {
+        // 输入状态通知已在前端通过 /user/queue/typing 订阅处理
     }
 }

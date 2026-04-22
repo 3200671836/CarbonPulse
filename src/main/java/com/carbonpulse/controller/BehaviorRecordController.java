@@ -5,6 +5,10 @@ import com.carbonpulse.entity.BehaviorType;
 import com.carbonpulse.service.BehaviorRecordService;
 import com.carbonpulse.service.BehaviorTypeService;
 import com.carbonpulse.utils.JwtUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/behavior")
+@Tag(name = "低碳行为", description = "行为类型管理、行为记录、看板数据、减排趋势")
 public class BehaviorRecordController {
 
     @Autowired
@@ -23,46 +28,41 @@ public class BehaviorRecordController {
     @Autowired
     private JwtUtil jwtUtil;
 
-
     @Autowired
     private BehaviorTypeService behaviorTypeService;
 
+    @Operation(summary = "获取所有行为类型", description = "返回系统中全部低碳行为类型列表")
     @GetMapping("/types")
     public List<BehaviorType> getAllBehaviorTypes() {
         return behaviorTypeService.findAll();
     }
 
+    @Operation(summary = "获取行为类型详情", description = "根据ID获取单个行为类型信息")
     @GetMapping("/type/{id}")
-    public BehaviorType getBehaviorTypeById(@PathVariable Long id) {
+    public BehaviorType getBehaviorTypeById(
+            @Parameter(description = "行为类型ID") @PathVariable Long id) {
         return behaviorTypeService.findById(id);
     }
 
+    @Operation(summary = "删除行为类型", description = "根据ID删除行为类型")
     @DeleteMapping("/type/{id}")
-    public void deleteBehaviorTypeById(@PathVariable Long id) {
+    public void deleteBehaviorTypeById(
+            @Parameter(description = "行为类型ID") @PathVariable Long id) {
         behaviorTypeService.deleteById(id);
     }
 
-
-    /**
-     * 获取当前登录用户ID
-     */
     private Long getCurrentUserId(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
         if (token == null || token.isEmpty()) {
             throw new RuntimeException("未登录");
         }
-        // 如果 token 以 "Bearer " 开头，需去除
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
         return jwtUtil.getUserIdFromToken(token);
     }
 
-    /**
-     * 记录行为
-     * POST /api/behavior/record
-     * 请求体：{ "behaviorTypeId": 1, "value": 3.5 }
-     */
+    @Operation(summary = "记录低碳行为", description = "提交一次低碳行为记录，系统自动计算减排量")
     @PostMapping("/record")
     public Result recordBehavior(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         try {
@@ -76,9 +76,7 @@ public class BehaviorRecordController {
         }
     }
 
-    /**
-     * 获取今日记录列表
-     */
+    @Operation(summary = "获取今日行为记录", description = "返回当前用户今日的所有低碳行为记录")
     @GetMapping("/today")
     public Result getTodayRecords(HttpServletRequest request) {
         try {
@@ -89,9 +87,7 @@ public class BehaviorRecordController {
         }
     }
 
-    /**
-     * 获取个人看板数据
-     */
+    @Operation(summary = "获取个人看板数据", description = "返回当前用户的减排统计概览（总减排、连续天数、排名等）")
     @GetMapping("/dashboard")
     public Result getDashboard(HttpServletRequest request) {
         try {
@@ -102,9 +98,7 @@ public class BehaviorRecordController {
         }
     }
 
-    /**
-     * 获取近7天减排趋势
-     */
+    @Operation(summary = "获取近7天减排趋势", description = "返回当前用户最近7天的每日减排量折线图数据")
     @GetMapping("/weekly")
     public Result getWeeklyTrend(HttpServletRequest request) {
         try {
@@ -115,10 +109,7 @@ public class BehaviorRecordController {
         }
     }
 
-
-    /**
-     * 获取历史数据
-     */
+    @Operation(summary = "获取历史行为记录", description = "返回当前用户的历史行为记录列表")
     @GetMapping("/history")
     public Result getHistory(HttpServletRequest request) {
         try {
@@ -128,5 +119,4 @@ public class BehaviorRecordController {
             return Result.error(e.getMessage());
         }
     }
-
 }

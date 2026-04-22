@@ -3,6 +3,10 @@ package com.carbonpulse.controller;
 import com.carbonpulse.common.Result;
 import com.carbonpulse.service.RankService;
 import com.carbonpulse.utils.JwtUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/rank")
+@Tag(name = "排行榜", description = "全局排行、好友排行、周榜、月榜")
 public class RankController {
 
     @Autowired
@@ -20,16 +25,13 @@ public class RankController {
     @Autowired
     private JwtUtil jwtUtil;
 
-
+    @Operation(summary = "触发排行榜更新", description = "手动触发全量排行榜数据重新计算")
     @PostMapping("/updateRanks")
     public String updateRanks() {
         rankService.updateAllRanks();
         return "排行榜更新已触发";
     }
 
-    /**
-     * 获取当前用户ID
-     */
     private Long getCurrentUserId(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
         if (token == null || token.isEmpty()) {
@@ -41,12 +43,10 @@ public class RankController {
         return jwtUtil.getUserIdFromToken(token);
     }
 
-    /**
-     * 全局周榜
-     * @param topN 返回前几名，默认10
-     */
+    @Operation(summary = "全局周榜", description = "获取全站本周减排量排名前N名")
     @GetMapping("/global/week")
-    public Result getGlobalWeekRank(@RequestParam(defaultValue = "10") int topN) {
+    public Result getGlobalWeekRank(
+            @Parameter(description = "返回前几名") @RequestParam(defaultValue = "10") int topN) {
         try {
             List<Map<String, Object>> rank = rankService.getGlobalWeekRank(topN);
             return Result.success(rank);
@@ -55,11 +55,10 @@ public class RankController {
         }
     }
 
-    /**
-     * 全局月榜
-     */
+    @Operation(summary = "全局月榜", description = "获取全站本月减排量排名前N名")
     @GetMapping("/global/month")
-    public Result getGlobalMonthRank(@RequestParam(defaultValue = "10") int topN) {
+    public Result getGlobalMonthRank(
+            @Parameter(description = "返回前几名") @RequestParam(defaultValue = "10") int topN) {
         try {
             List<Map<String, Object>> rank = rankService.getGlobalMonthRank(topN);
             return Result.success(rank);
@@ -68,12 +67,11 @@ public class RankController {
         }
     }
 
-    /**
-     * 好友周榜
-     */
+    @Operation(summary = "好友周榜", description = "获取当前用户好友中本周减排量排名前N名")
     @GetMapping("/friends/week")
-    public Result getFriendWeekRank(@RequestParam(defaultValue = "10") int topN,
-                                    HttpServletRequest request) {
+    public Result getFriendWeekRank(
+            @Parameter(description = "返回前几名") @RequestParam(defaultValue = "10") int topN,
+            HttpServletRequest request) {
         try {
             Long userId = getCurrentUserId(request);
             List<Map<String, Object>> rank = rankService.getFriendWeekRank(userId, topN);

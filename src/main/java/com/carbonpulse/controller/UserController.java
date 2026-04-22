@@ -5,6 +5,9 @@ import com.carbonpulse.entity.User;
 import com.carbonpulse.listener.WebSocketEventListener;
 import com.carbonpulse.utils.JwtUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -15,10 +18,10 @@ import com.carbonpulse.service.UserService;
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j // 记录日志
+@Slf4j
 @RequestMapping("/api/user")
 @RestController
-@CrossOrigin // 支持跨域
+@Tag(name = "用户管理", description = "用户注册、登录、个人信息相关接口")
 public class UserController {
     @Autowired
     private UserService userService;
@@ -29,11 +32,7 @@ public class UserController {
     @Autowired
     private WebSocketEventListener webSocketEventListener;
 
-    /**
-     * 用户注册
-     * @param user 用户信息（username, password, nickname）
-     * @return 注册结果
-     */
+    @Operation(summary = "用户注册", description = "新用户注册，需提供用户名、密码和昵称")
     @PostMapping("/register")
     public Result register(@RequestBody User user) {
         try {
@@ -44,11 +43,7 @@ public class UserController {
         }
     }
 
-    /**
-     * 用户登录
-     * @param loginMap { username, password }
-     * @return token 及用户基本信息
-     */
+    @Operation(summary = "用户登录", description = "用户名密码登录，返回JWT Token和用户信息")
     @PostMapping("/login")
     public Result login(@RequestBody Map<String, String> loginMap) {
         String username = loginMap.get("username");
@@ -65,13 +60,9 @@ public class UserController {
         }
     }
 
-    /**
-     * 获取当前登录用户信息（需认证）
-     * @return 用户详情
-     */
+    @Operation(summary = "获取当前用户信息", description = "需JWT认证，返回当前登录用户的详细信息")
     @GetMapping("/info")
     public Result getUserInfo() {
-        // 从 SecurityContext 获取当前认证的用户 ID（在过滤器中存入的 principal）
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal == null) {
             return Result.error("未登录");
@@ -85,14 +76,9 @@ public class UserController {
         return Result.success(user);
     }
 
-    /**
-     * 修改用户信息（昵称、头像）
-     * @param user 包含修改字段的用户对象
-     * @return 更新结果
-     */
+    @Operation(summary = "修改用户信息", description = "需JWT认证，可修改昵称、头像等字段")
     @PutMapping("/update")
     public Result updateProfile(@RequestBody User user) {
-        // 从 SecurityContext 获取当前认证的用户 ID
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Long)) {
             return Result.error("未登录");
@@ -104,18 +90,16 @@ public class UserController {
         return success ? Result.success("更新成功") : Result.error("更新失败");
     }
 
-    /**
-     * 获取用户信息
-     * @return 用户详情（含在线状态）
-     */
+    @Operation(summary = "获取指定用户信息", description = "根据userId获取用户详情，含在线状态")
     @GetMapping("/profile")
-    public Result getUserById(@RequestParam Long userId) {
+    public Result getUserById(
+            @Parameter(description = "目标用户ID", required = true)
+            @RequestParam Long userId) {
         User user = userService.getById(userId);
         if (user == null) {
             return Result.error("用户不存在");
         }
         user.setPassword(null);
-        // 设置用户在线状态
         String status = webSocketEventListener.getUserStatus(userId);
         user.setStatus(status);
         return Result.success(user);

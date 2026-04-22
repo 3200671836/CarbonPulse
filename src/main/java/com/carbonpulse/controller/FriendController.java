@@ -3,6 +3,10 @@ package com.carbonpulse.controller;
 import com.carbonpulse.common.Result;
 import com.carbonpulse.service.FriendService;
 import com.carbonpulse.utils.JwtUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/friend")
+@Tag(name = "好友管理", description = "添加好友、删除好友、好友列表、好友动态")
 public class FriendController {
 
     @Autowired
@@ -30,11 +35,7 @@ public class FriendController {
         return jwtUtil.getUserIdFromToken(token);
     }
 
-    /**
-     * 添加好友
-     * POST /api/friend/add
-     * 请求体：{ "friendId": 123 }
-     */
+    @Operation(summary = "添加好友", description = "向指定用户发送好友请求，双向建立好友关系")
     @PostMapping("/add")
     public Result addFriend(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         try {
@@ -47,12 +48,11 @@ public class FriendController {
         }
     }
 
-    /**
-     * 删除好友
-     * DELETE /api/friend/delete/{friendId}
-     */
+    @Operation(summary = "删除好友", description = "解除与指定用户的好友关系")
     @DeleteMapping("/delete/{friendId}")
-    public Result deleteFriend(@PathVariable Long friendId, HttpServletRequest request) {
+    public Result deleteFriend(
+            @Parameter(description = "好友用户ID") @PathVariable Long friendId,
+            HttpServletRequest request) {
         try {
             Long userId = getCurrentUserId(request);
             boolean success = friendService.deleteFriend(userId, friendId);
@@ -62,14 +62,12 @@ public class FriendController {
         }
     }
 
-    /**
-     * 好友列表（分页）
-     * GET /api/friend/list?page=1&size=10
-     */
+    @Operation(summary = "好友列表（分页）", description = "获取当前用户的好友列表，含在线状态")
     @GetMapping("/list")
-    public Result getFriendList(@RequestParam(defaultValue = "1") int page,
-                                @RequestParam(defaultValue = "10") int size,
-                                HttpServletRequest request) {
+    public Result getFriendList(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
         try {
             Long userId = getCurrentUserId(request);
             return Result.success(friendService.getFriendList(userId, page, size));
@@ -78,12 +76,11 @@ public class FriendController {
         }
     }
 
-    /**
-     * 检查是否好友关系
-     * GET /api/friend/check/{friendId}
-     */
+    @Operation(summary = "检查好友关系", description = "判断当前用户与指定用户是否为好友")
     @GetMapping("/check/{friendId}")
-    public Result checkFriend(@PathVariable Long friendId, HttpServletRequest request) {
+    public Result checkFriend(
+            @Parameter(description = "目标用户ID") @PathVariable Long friendId,
+            HttpServletRequest request) {
         try {
             Long userId = getCurrentUserId(request);
             boolean isFriend = friendService.isFriend(userId, friendId);
@@ -93,14 +90,12 @@ public class FriendController {
         }
     }
 
-    /**
-     * 好友动态（分页）
-     * GET /api/friend/posts?page=1&size=10
-     */
+    @Operation(summary = "好友动态（分页）", description = "获取当前用户好友发布的动态列表")
     @GetMapping("/posts")
-    public Result getFriendPosts(@RequestParam(defaultValue = "1") int page,
-                                 @RequestParam(defaultValue = "10") int size,
-                                 HttpServletRequest request) {
+    public Result getFriendPosts(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
         try {
             Long userId = getCurrentUserId(request);
             return Result.success(friendService.getFriendPosts(userId, page, size));
