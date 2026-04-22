@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.carbonpulse.mapper.BehaviorTypeMapper">
+    <!-- MyBatis Plus会自动处理大部分CRUD操作，这里仅作为示例 -->
+    <select id="selectById" resultType="com.carbonpulse.entity.BehaviorType">
+        SELECT * FROM behavior_type WHERE id = #{id}
+    </select>
+</mapper>

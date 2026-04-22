@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.carbonpulse.mapper.BehaviorRecordMapper">
+
+    <!-- 查询用户最近7天每日减排量 -->
+    <select id="selectWeeklyCarbon" resultType="java.util.HashMap">
+        SELECT
+            record_date,
+            SUM(carbon_reduction) AS total_carbon
+        FROM behavior_record
+        WHERE user_id = #{userId}
+          AND record_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY record_date
+        ORDER BY record_date
+    </select>
+
+    <!-- 查询用户今日记录 -->
+    <select id="selectTodayRecords" resultType="com.carbonpulse.entity.BehaviorRecord">
+        SELECT *
+        FROM behavior_record
+        WHERE user_id = #{userId} AND record_date = #{today}
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectHistory" resultType="com.carbonpulse.entity.BehaviorRecord">
+        SELECT *
+        FROM behavior_record
+        WHERE user_id = #{userId}
+        ORDER BY record_date, create_time DESC
+    </select>
+
+    <!-- 获取单个用户指定时间范围减排量 -->
+    <select id="sumCarbonByDateRange" resultType="java.lang.Integer">
+        SELECT IFNULL(SUM(carbon_reduction), 0)
+        FROM behavior_record
+        WHERE user_id = #{userId}
+          AND record_date BETWEEN #{startDate} AND #{endDate}
+    </select>
+
+    <!-- 获取所有用户指定时间范围减排量 -->
+    <select id="listUserCarbonByDateRange" resultType="java.util.HashMap">
+        SELECT user_id AS userId, SUM(carbon_reduction) AS totalCarbon
+        FROM behavior_record
+        WHERE record_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY user_id
+        ORDER BY totalCarbon DESC
+    </select>
+
+
+    <insert id="insertBehaviorRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO behavior_record (
+            user_id, behavior_type_id, value, carbon_reduction, record_date, create_time
+        ) VALUES (
+                     #{userId}, #{behaviorTypeId}, #{value}, #{carbonReduction}, #{recordDate}, NOW()
+                 )
+    </insert>
+</mapper>

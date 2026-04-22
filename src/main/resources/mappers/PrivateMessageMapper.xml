@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.carbonpulse.mapper.PrivateMessageMapper">
+
+    <!-- 分页查询指定会话的私聊消息，按创建时间正序 -->
+    <select id="selectByConversationPage" resultType="com.carbonpulse.entity.PrivateMessage">
+        SELECT *
+        FROM private_message
+        WHERE conversation_id = #{conversationId}
+        ORDER BY create_time ASC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 将指定会话中接收者为当前用户的所有未读消息标记为已读 -->
+    <update id="markAsReadByConversation">
+        UPDATE private_message
+        SET is_read = 1
+        WHERE conversation_id = #{conversationId}
+          AND to_user_id = #{userId}
+          AND is_read = 0
+    </update>
+
+</mapper>

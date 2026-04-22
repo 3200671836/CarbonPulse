@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.carbonpulse.mapper.LikeRecordMapper">
+
+    <select id="existsLike" resultType="int">
+        SELECT COUNT(1) FROM like_record WHERE post_id = #{postId} AND user_id = #{userId}
+    </select>
+
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.carbonpulse.mapper.UserMapper">
+
+    <select id="selectByUsername" resultType="com.carbonpulse.entity.User">
+        SELECT * FROM user WHERE username = #{username}
+    </select>
+
+    <select id="getById" resultType="com.carbonpulse.entity.User">
+        SELECT * FROM user WHERE id = #{id}
+    </select>
+
+    <insert id="register" parameterType="com.carbonpulse.entity.User">
+        INSERT INTO user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="username != null and username != ''">username,</if>
+            <if test="avatar != null and avatar != ''">avatar,</if>
+            <if test="password != null and password != ''">password,</if>
+            <if test="nickname != null and nickname != ''">nickname,</if>
+            <if test="totalCarbon != null">total_carbon,</if>
+            <if test="consecutiveDays != null">consecutive_days,</if>
+            <if test="lastRecordDate != null">last_record_date,</if>
+            <!-- 如果 create_time 允许手动传入，则保留 if；否则使用数据库默认值 -->
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="username != null and username != ''">#{username},</if>
+            <if test="avatar != null and avatar != ''">#{avatar},</if>
+            <if test="password != null and password != ''">#{password},</if>
+            <if test="nickname != null and nickname != ''">#{nickname},</if>
+            <if test="totalCarbon != null">#{totalCarbon},</if>
+            <if test="consecutiveDays != null">#{consecutiveDays},</if>
+            <if test="lastRecordDate != null">#{lastRecordDate},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <!-- 如果 create_time 通常由数据库自动填充（如 DEFAULT CURRENT_TIMESTAMP），则无需插入 -->
+            <!-- 如需插入 sysdate()，可以单独处理，但注意与字段列表对应 -->
+        </trim>
+    </insert>
+
+    <select id="selectByIdWithMap" resultType="java.util.HashMap">
+        SELECT id, nickname, avatar, total_carbon, consecutive_days FROM user WHERE id = #{id}
+    </select>
+
+    <select id="selectAllUserIds" resultType="java.lang.Long">
+        SELECT id FROM user
+    </select>
+</mapper>

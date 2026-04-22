@@ -1,0 +1,53 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### 敏感配置 - 不要提交真实密码 ###
+src/main/resources/application-prod.yml
+
+### 系统文件 ###
+Thumbs.db
+.DS_Store
+*.swp
+*.swo
+*~
+
+### 日志 ###
+*.log
+logs/
+
+### update.sql 中的测试数据可能包含敏感信息，按需提交 ###
+# update.sql
+
+### 真实配置文件（含密码，不提交）###
+src/main/resources/application.yml

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.carbonpulse.mapper.PostMapper">
+
+    <!-- 查询总记录数 -->
+    <select id="selectPostCount" resultType="long">
+        SELECT COUNT(*) FROM post
+    </select>
+
+    <!-- 分页查询动态列表，关联用户表获取作者信息 -->
+    <select id="selectPostListWithUser" resultType="map">
+        SELECT
+            p.id,
+            p.user_id        AS userId,
+            p.content,
+            p.images,
+            p.related_behavior_id AS relatedBehaviorId,
+            p.like_count     AS likeCount,
+            p.comment_count  AS commentCount,
+            p.create_time    AS createTime,
+            u.nickname       AS authorNickname,
+            u.avatar         AS authorAvatar
+        FROM post p
+                 LEFT JOIN user u ON p.user_id = u.id
+        ORDER BY p.create_time DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+
+    <select id="selectPostsByUserIds" resultType="java.util.HashMap">
+        SELECT
+        p.id,
+        p.user_id,
+        p.content,
+        p.images,
+        p.related_behavior_id,
+        p.like_count,
+        p.comment_count,
+        p.create_time,
+        u.nickname AS author_nickname,
+        u.avatar AS author_avatar
+        FROM post p
+        LEFT JOIN user u ON p.user_id = u.id
+        WHERE p.user_id IN
+        <foreach collection="userIds" item="uid" open="(" separator="," close=")">
+            #{uid}
+        </foreach>
+        ORDER BY p.create_time DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countPostsByUserIds" resultType="long">
+        SELECT COUNT(1) FROM post
+        WHERE user_id IN
+        <foreach collection="userIds" item="uid" open="(" separator="," close=")">
+            #{uid}
+        </foreach>
+    </select>
+
+
+    <select id="selectPostsByUserId" resultType="java.util.HashMap">
+        SELECT
+            p.id,
+            p.user_id,
+            p.content,
+            p.images,
+            p.related_behavior_id,
+            p.like_count,
+            p.comment_count,
+            p.create_time,
+            u.nickname AS author_nickname,
+            u.avatar AS author_avatar
+        FROM post p
+                 LEFT JOIN user u ON p.user_id = u.id
+        WHERE p.user_id = #{userId}
+        ORDER BY p.create_time DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+
+    <select id="selectPostCountByUserId" resultType="long">
+        SELECT COUNT(1) FROM post
+        WHERE user_id = #{userId}
+    </select>
+
+
+</mapper>
